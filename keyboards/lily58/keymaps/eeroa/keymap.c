@@ -1,11 +1,18 @@
 #include QMK_KEYBOARD_H
+#include <stdio.h>
 #include "keymap_finnish.h"
 
 enum layer_number {
   _QWERTY = 0,
+  _COLEMAK,
   _LOWER,
   _RAISE,
   _ADJUST,
+};
+
+enum custom_keycodes {
+  QWERTY = SAFE_RANGE,
+  COLEMAK,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -29,6 +36,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, FI_ACUT,
   KC_LCTL, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, FI_ODIA, FI_ADIA,
   KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,  FI_LABK,  FI_DIAE,  KC_N,    KC_M, FI_COMM,  FI_DOT, FI_MINS, KC_RSFT,
+                        KC_LALT, KC_LGUI, MO(_LOWER), KC_SPC,    KC_ENT, MO(_RAISE), KC_BSPC, KC_RALT
+),
+/* COLEMAK (Modified)
+ * ,-----------------------------------------.                    ,-----------------------------------------.
+ * | ESC  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |  +\? |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * | Tab  |   Q  |   W  |   F  |   P  |   B  |                    |   J  |   L  |   U  |   Y  |   ,  |   '  |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |LCtrl |   A  |   R  |   S  |   T  |   G  |-------.    ,-------|   M  |   N  |   E  |   I  |   O  |   -  |
+ * |------+------+------+------+------+------|  <>|  |    |  ¨^~  |------+------+------+------+------+------|
+ * |LShift|   Z  |   X  |   C  |   D  |   V  |-------|    |-------|   K  |   H  |   Ä  |   Ö  |   .  |RShift|
+ * `-----------------------------------------/       /     \      \-----------------------------------------'
+ *                   | LAlt | LGUI |LOWER | /Space  /       \Enter \  |RAISE |BackSP| RAlt |
+ *                   |      |      |      |/       /         \      \ |      |      |      |
+ *                   `----------------------------'           '------''--------------------'
+ */
+
+ [_COLEMAK] = LAYOUT(
+  KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0, FI_PLUS,
+  KC_TAB,  KC_Q,    KC_W,    KC_F,    KC_P,    KC_B,                      KC_J,    KC_L,    KC_U,    KC_Y, FI_COMM, FI_QUOT,
+  KC_LCTL, KC_A,    KC_R,    KC_S,    KC_T,    KC_G,                      KC_M,    KC_N,    KC_E,    KC_I,    KC_O, FI_MINS,
+  KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_D,    KC_V,  FI_LABK,  FI_DIAE,  KC_K,    KC_H, FI_ADIA, FI_ODIA,  FI_DOT, KC_RSFT,
                         KC_LALT, KC_LGUI, MO(_LOWER), KC_SPC,    KC_ENT, MO(_RAISE), KC_BSPC, KC_RALT
 ),
 /* LOWER
@@ -78,7 +107,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |      |      |      |      |      |      |                    |      |      |      |QWERTY|COLMAK|      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      |      |      |      |      |-------.    ,-------|      |      |RGB ON| HUE+ | SAT+ | VAL+ |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
@@ -90,7 +119,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
   [_ADJUST] = LAYOUT(
   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, QWERTY,  COLEMAK, XXXXXXX,
   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
                              _______, _______, _______, _______, _______,  _______, _______, _______
@@ -111,11 +140,11 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 // When you add source files to SRC in rules.mk, you can use functions.
-const char *read_layer_state(void);
-const char *read_logo(void);
-void set_keylog(uint16_t keycode, keyrecord_t *record);
-const char *read_keylog(void);
-const char *read_keylogs(void);
+const char* read_layer_state(void);
+const char* read_logo(void);
+//void set_keylog(uint16_t keycode, keyrecord_t *record);
+//const char *read_keylog(void);
+//const char *read_keylogs(void);
 
 // const char *read_mode_icon(bool swap);
 // const char *read_host_led_state(void);
@@ -126,8 +155,8 @@ bool oled_task_user(void) {
   if (is_keyboard_master()) {
     // If you want to change the display of OLED, you need to change here
     oled_write_ln(read_layer_state(), false);
-    oled_write_ln(read_keylog(), false);
-    oled_write_ln(read_keylogs(), false);
+    //oled_write_ln(read_keylog(), false);
+    //oled_write_ln(read_keylogs(), false);
     //oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
     //oled_write_ln(read_host_led_state(), false);
     //oled_write_ln(read_timelog(), false);
@@ -139,11 +168,57 @@ bool oled_task_user(void) {
 #endif // OLED_ENABLE
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  if (record->event.pressed) {
-#ifdef OLED_ENABLE
-    set_keylog(keycode, record);
-#endif
-    // set_timelog();
+//   if (record->event.pressed) {
+// #ifdef OLED_ENABLE
+    // set_keylog(keycode, record);
+// #endif
+   // set_timelog();
+//   }
+  switch (keycode)
+  {
+  case QWERTY:
+    if (record->event.pressed) {
+        set_single_persistent_default_layer(_QWERTY);
+    }
+    break;
+  case COLEMAK:
+    if (record->event.pressed) {
+        set_single_persistent_default_layer(_COLEMAK);
+    }
+    break;
+  default:
+    break;
   }
   return true;
+}
+
+char layer_state_str[24];
+
+#define L_BASE 0
+#define L_LOWER (1 << _LOWER)
+#define L_RAISE (1 << _RAISE)
+#define L_ADJUST (1 << _ADJUST)
+#define L_ADJUST_TRI (L_ADJUST | L_RAISE | L_LOWER)
+
+const char* read_layer_state(void) {
+  switch (layer_state)
+  {
+  case L_BASE:
+    snprintf(layer_state_str, sizeof(layer_state_str), "Layer %u: Default", layer_state);
+    break;
+  case L_RAISE:
+    snprintf(layer_state_str, sizeof(layer_state_str), "Layer %u: Raise", layer_state);
+    break;
+  case L_LOWER:
+    snprintf(layer_state_str, sizeof(layer_state_str), "Layer %u: Lower", layer_state);
+    break;
+  case L_ADJUST:
+  case L_ADJUST_TRI:
+    snprintf(layer_state_str, sizeof(layer_state_str), "Layer %u: Adjust", layer_state);
+    break;
+  default:
+    snprintf(layer_state_str, sizeof(layer_state_str), "Layer: Undef-%u", layer_state);
+  }
+
+  return layer_state_str;
 }
